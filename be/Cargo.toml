@@ -18,7 +18,7 @@ serde = { version = "1.0.137", features = ["derive"]}
 tokio = { version = "1.18.2", features = ["macros", "rt-multi-thread"] }
 
 [dependencies.sqlx]
-version = "0.5.12"
+version = "0.5.13"
 default-features = false
 features = [
     "runtime-actix-rustls",
