@@ -1,0 +1,5 @@
+1. At command line 
+	sqlx migrate add create_subscriptions_table		(will generate migrations folder)
+	
+2. run at the next time
+	SKIP_DOCKER=true ./scripts/init_db.sh
