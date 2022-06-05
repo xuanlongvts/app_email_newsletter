@@ -15,9 +15,10 @@ name = "email_newsletter"
 
 [dependencies]
 actix-web = "4.0.1"
-serde = { version = "1.0.137", features = ["derive"]}
+serde = "1.0.137"
 tokio = { version = "1.18.2", features = ["macros", "rt-multi-thread"] }
-config = "0.13.1"
+config = { version = "0.13.1", default-features = false, features = ["yaml"] }
+chrono = "0.4.19"
 
 [dependencies.sqlx]
 version = "0.5.13"
@@ -31,6 +32,11 @@ features = [
     "migrate"
 ]
 
+[dependencies.uuid]
+version = "1.1.1"
+features = [
+    "v4"
+]
+
 [dev-dependencies]
 reqwest = { version = "0.11.10", features = ["json"] }
-
