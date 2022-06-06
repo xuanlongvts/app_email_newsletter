@@ -13,7 +13,7 @@ pub async fn subscribe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> Ht
 	let id = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128());
 	match sqlx::query!(
 		r#"
-		INSERT INTO subscriptions (id, name, email, subscribed_at)
+		INSERT INTO subscriptions (id, email, name, subscribed_at)
 		VALUES ($1, $2, $3, $4)
 		"#,
 		id,
