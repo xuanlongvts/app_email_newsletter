@@ -1,8 +1,24 @@
 use email_newsletter::configuration::{get_configuration, DatabaseSettings};
 use email_newsletter::startup::run;
+use email_newsletter::telemetry::{get_subscriber, init_subscriber};
+use once_cell::sync::Lazy;
+use secrecy::ExposeSecret;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
 use uuid::Uuid;
+
+static TRACING: Lazy<()> = Lazy::new(|| {
+	let default_filter_level = "info".to_string();
+	let subscriber_name = "test".to_string();
+
+	if std::env::var("TEST_LOG").is_ok() {
+		let subscriber = get_subscriber(subscriber_name, default_filter_level, std::io::stdout);
+		init_subscriber(subscriber);
+	} else {
+		let subscriber = get_subscriber(subscriber_name, default_filter_level, std::io::sink);
+		init_subscriber(subscriber);
+	}
+});
 
 pub struct TestApp {
 	pub address: String,
@@ -10,6 +26,7 @@ pub struct TestApp {
 }
 
 async fn spawn_app() -> TestApp {
+	Lazy::force(&TRACING);
 	let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
 	let port = listener.local_addr().unwrap().port();
 	let address = format!("http://127.0.0.1:{}", port);
@@ -29,16 +46,17 @@ async fn spawn_app() -> TestApp {
 
 async fn configure_database(config: &DatabaseSettings) -> PgPool {
 	// Create database
-	let mut connection = PgConnection::connect(&config.connection_string_without_db())
-		.await
-		.expect("Failed to create database.");
+	let mut connection =
+		PgConnection::connect(&config.connection_string_without_db().expose_secret())
+			.await
+			.expect("Failed to create database.");
 	connection
 		.execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
 		.await
 		.expect("Failed to create database.");
 
 	// Migrate database
-	let connection_pool = PgPool::connect(&config.connection_string())
+	let connection_pool = PgPool::connect(&config.connection_string().expose_secret())
 		.await
 		.expect("Failed to create database.");
 
