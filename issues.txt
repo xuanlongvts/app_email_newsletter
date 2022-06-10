@@ -1,0 +1,14 @@
+https://viblo.asia/p/vao-mot-ngay-dep-troi-server-bi-het-o-cung-vi-docker-RQqKLQebZ7z
+
+Docker issues
+
+1. Check list all docker save:
+
+	docker system df
+
+2. Delete Docker image
+	docker image prune
+
+3. Delete Docker cache
+	docker builder prune
+
