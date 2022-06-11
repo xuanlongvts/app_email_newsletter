@@ -6,3 +6,7 @@
    sudo TEST_LOG=true cargo test health_check_works | bunyan
 4. Run with prettier format
    sudo cargo run | bunyan
+
+
+5. Docker build
+   sudo docker build --tag email_newsletter --file Dockerfile .

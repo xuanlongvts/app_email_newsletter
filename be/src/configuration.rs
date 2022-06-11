@@ -43,6 +43,8 @@ pub fn get_configuration() -> Result<Settings, ConfigError> {
         .add_source(config::Environment::with_prefix("app").separator("__"))
         .build()?;
 
+    // println!("settings ---> {:?}", settings);
+
     settings.try_deserialize()
 }
 
@@ -69,6 +71,7 @@ impl DatabaseSettings {
     }
 }
 
+#[derive(Debug)]
 pub enum Environment {
     Local,
     Production,
