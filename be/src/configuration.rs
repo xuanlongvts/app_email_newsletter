@@ -1,7 +1,8 @@
 use config::{Config, ConfigError, File};
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
-use sqlx::postgres::PgConnectOptions;
+use sqlx::postgres::{PgConnectOptions, PgSslMode};
+use sqlx::ConnectOptions;
 use serde_aux::field_attributes::deserialize_number_from_string;
 
 #[derive(Debug, Deserialize)]
@@ -12,6 +13,8 @@ pub struct DatabaseSettings {
     pub port: u16,
     pub host: String,
     pub database_name: String,
+    // Determine if we demand the connection to be encrypted or not
+    pub require_ssl: bool
 }
 
 #[derive(Debug, Deserialize)]
@@ -54,11 +57,19 @@ pub fn get_configuration() -> Result<Settings, ConfigError> {
 
 impl DatabaseSettings {
     pub fn without_db(&self) -> PgConnectOptions {
-        PgConnectOptions::new().host(&self.host).username(&self.username).password(&self.password.expose_secret()).port(self.port)
+        let ssl_mode = if self.require_ssl {
+            PgSslMode::Require
+        } else {
+            PgSslMode::Prefer
+        };
+        PgConnectOptions::new().host(&self.host).username(&self.username).password(&self.password.expose_secret()).port(self.port).ssl_mode(ssl_mode)
     }
 
     pub fn with_db(&self) -> PgConnectOptions {
-        self.without_db().database(&self.database_name)
+        let mut options = self.without_db().database(&self.database_name);
+        options.log_statements(tracing::log::LevelFilter::Trace);
+
+        options
     }
 }
 
