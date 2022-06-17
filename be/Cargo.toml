@@ -56,4 +56,6 @@ features = [
 fake = "2.4.3"
 quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
+serde_json = "1.0.81"
+wiremock = "0.5.13"
 
