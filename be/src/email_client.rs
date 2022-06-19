@@ -23,8 +23,8 @@ struct SendEmailRequest<'a> {
 }
 
 impl EmailClient {
-    pub fn new(base_url: String, sender: SubscriberEmail, authorization_token: Secret<String>) -> Self {
-        let http_client = Client::builder().timeout(std::time::Duration::from_secs(10)).build().unwrap();
+    pub fn new(base_url: String, sender: SubscriberEmail, authorization_token: Secret<String>, timeout: std::time::Duration) -> Self {
+        let http_client = Client::builder().timeout(timeout).build().unwrap();
         Self {
             http_client,
             base_url,
@@ -105,7 +105,9 @@ mod tests {
 
     /// Get a test instance of `EmailClient`
     fn email_client(base_url: String) -> EmailClient {
-        EmailClient::new(base_url, email(), Secret::new(Faker.fake()))
+        // Much lower than 10s!
+        let timeout = std::time::Duration::from_secs(2);
+        EmailClient::new(base_url, email(), Secret::new(Faker.fake()), timeout)
     }
 
     #[tokio::test]
