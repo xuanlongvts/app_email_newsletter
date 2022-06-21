@@ -1,12 +1,12 @@
+use crate::domain::SubscriberEmail;
 use config::{Config, ConfigError, File};
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
-use sqlx::postgres::{PgConnectOptions, PgSslMode};
-use sqlx::{ConnectOptions};
 use serde_aux::field_attributes::deserialize_number_from_string;
-use crate::domain::SubscriberEmail;
+use sqlx::postgres::{PgConnectOptions, PgSslMode};
+use sqlx::ConnectOptions;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct DatabaseSettings {
     pub username: String,
     pub password: Secret<String>,
@@ -15,29 +15,29 @@ pub struct DatabaseSettings {
     pub host: String,
     pub database_name: String,
     // Determine if we demand the connection to be encrypted or not
-    pub require_ssl: bool
+    pub require_ssl: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Settings {
     pub database: DatabaseSettings,
     pub application: ApplicationSettings,
-    pub email_client: EmailClientSettings
+    pub email_client: EmailClientSettings,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct ApplicationSettings {
     #[serde(deserialize_with = "deserialize_number_from_string")]
     pub port: u16,
     pub host: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct EmailClientSettings {
     pub base_url: String,
     pub sender_email: String,
     pub authorization_token: Secret<String>,
-    pub timeout_seconds: u64
+    pub timeout_seconds: u64,
 }
 
 impl EmailClientSettings {
@@ -86,7 +86,12 @@ impl DatabaseSettings {
         } else {
             PgSslMode::Prefer
         };
-        PgConnectOptions::new().host(&self.host).username(&self.username).password(&self.password.expose_secret()).port(self.port).ssl_mode(ssl_mode)
+        PgConnectOptions::new()
+            .host(&self.host)
+            .username(&self.username)
+            .password(&self.password.expose_secret())
+            .port(self.port)
+            .ssl_mode(ssl_mode)
     }
 
     pub fn with_db(&self) -> PgConnectOptions {
