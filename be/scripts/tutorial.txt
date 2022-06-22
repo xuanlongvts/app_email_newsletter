@@ -1,5 +1,26 @@
-1. At command line 
+1. At command line root folder (be)
 	sqlx migrate add create_subscriptions_table		(will generate migrations folder)
-	
+
 2. run at the next time
 	SKIP_DOCKER=true ./scripts/init_db.sh
+
+-----------------
+3. Edit table subscriptions
+    sqlx migrate add add_status_to_subscriptions
+
+4. run at the next time
+    SKIP_DOCKER=true ./scripts/init_db.sh
+
+-----------------
+5. populated value to status column
+    sqlx migrate add make_status_not_null_in_subscriptions
+
+6. run at the next time
+    SKIP_DOCKER=true ./scripts/init_db.sh
+
+-----------------
+7. create new table subscription_tokens
+    sqlx migrate add create_subscription_tokens_table
+
+8. run at the next time
+    SKIP_DOCKER=true ./scripts/init_db.sh
