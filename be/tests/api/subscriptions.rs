@@ -135,6 +135,11 @@ async fn subscribe_fails_if_there_is_a_fatal_database_error() {
         .await
         .unwrap();
 
+    // sqlx::query!("ALTER TABLE subscriptions DROP COLUMN email;",)
+    //     .execute(&app.db_pool)
+    //     .await
+    //     .unwrap();
+
     // Act
     let response = app.post_subscriptions(body.into()).await;
     assert_eq!(response.status().as_u16(), 500);
