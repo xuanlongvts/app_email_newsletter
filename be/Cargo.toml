@@ -35,6 +35,7 @@ reqwest = { version = "0.11.10", default-features = false, features = ["json", "
 rand = { version = "0.8.5", features=["std_rng"] }
 thiserror = "1.0.31"
 anyhow = "1.0.58"
+base64 = "0.13.0"
 
 [dependencies.sqlx]
 version = "0.5.13"
