@@ -67,13 +67,22 @@ impl TestApp {
     }
 
     pub async fn post_newsletter(&self, body: serde_json::Value) -> reqwest::Response {
+        let (username, password) = self.test_user().await;
         reqwest::Client::new()
             .post(&format!("{}/newsletters", &self.address))
-            .basic_auth(Uuid::new_v4().to_string(), Some(Uuid::new_v4().to_string()))
+            .basic_auth(username, Some(password))
             .json(&body)
             .send()
             .await
             .expect("Failed to execute request.")
+    }
+
+    pub async fn test_user(&self) -> (String, String) {
+        let row = sqlx::query!("SELECT username, password FROM users LIMIT 1")
+            .fetch_one(&self.db_pool)
+            .await
+            .expect("Failed to create test users.");
+        (row.username, row.password)
     }
 }
 
@@ -99,12 +108,29 @@ pub async fn spawn_app() -> TestApp {
     let address = format!("http://127.0.0.1:{}", app_port);
     let _ = tokio::spawn(application.run_until_stopped());
 
-    TestApp {
+    let test_app = TestApp {
         address,
         db_pool: get_connection_pool(&configuration.database),
         email_server,
         port: app_port,
-    }
+    };
+    add_test_app(&test_app.db_pool).await;
+    test_app
+}
+
+async fn add_test_app(pool: &PgPool) {
+    let user_id = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128());
+    let username = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()).to_string();
+    let password = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()).to_string();
+    sqlx::query!(
+        "INSERT INTO users (user_id, username, password) VALUES ($1, $2, $3)",
+        user_id,
+        username,
+        password
+    )
+    .execute(pool)
+    .await
+    .expect("Failed to create test users.");
 }
 
 async fn configure_database(config: &DatabaseSettings) -> PgPool {
