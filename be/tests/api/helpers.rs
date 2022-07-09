@@ -1,9 +1,12 @@
+use argon2::password_hash::SaltString;
+use argon2::{Argon2, PasswordHasher};
 use email_newsletter::configuration::{get_configuration, DatabaseSettings};
 use email_newsletter::startup::{get_connection_pool, Application};
 use email_newsletter::telemetry::{get_subscriber, init_subscriber};
 use linkify::{LinkFinder, LinkKind};
 use once_cell::sync::Lazy;
 use reqwest::Url;
+use sha3::Digest;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 use wiremock::MockServer;
@@ -26,6 +29,41 @@ pub struct TestApp {
     pub db_pool: PgPool,
     pub email_server: MockServer,
     pub port: u16,
+    pub test_user: TestUser,
+}
+
+/// TestUser
+pub struct TestUser {
+    pub user_id: sqlx::types::Uuid,
+    pub username: String,
+    pub password: String,
+}
+
+impl TestUser {
+    pub fn generate() -> TestUser {
+        Self {
+            user_id: sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()),
+            username: sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()).to_string(),
+            password: sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()).to_string(),
+        }
+    }
+
+    async fn store(&self, pool: &PgPool) {
+        let salt = SaltString::generate(&mut rand::thread_rng());
+        let password_hash = Argon2::default()
+            .hash_password(self.password.as_bytes(), &salt)
+            .unwrap()
+            .to_string();
+        sqlx::query!(
+            "INSERT INTO users (user_id, username, password_hash) VALUES ($1, $2, $3)",
+            self.user_id,
+            self.username,
+            password_hash
+        )
+        .execute(pool)
+        .await
+        .expect("Failed to store test user.");
+    }
 }
 
 /// Confirmation links embedded in the request to the email API.
@@ -67,23 +105,23 @@ impl TestApp {
     }
 
     pub async fn post_newsletter(&self, body: serde_json::Value) -> reqwest::Response {
-        let (username, password) = self.test_user().await;
+        // let (username, password) = self.test_user().await;
         reqwest::Client::new()
             .post(&format!("{}/newsletters", &self.address))
-            .basic_auth(username, Some(password))
+            .basic_auth(&self.test_user.username, Some(&self.test_user.password))
             .json(&body)
             .send()
             .await
             .expect("Failed to execute request.")
     }
 
-    pub async fn test_user(&self) -> (String, String) {
-        let row = sqlx::query!("SELECT username, password FROM users LIMIT 1")
-            .fetch_one(&self.db_pool)
-            .await
-            .expect("Failed to create test users.");
-        (row.username, row.password)
-    }
+    // pub async fn test_user(&self) -> (String, String) {
+    //     let row = sqlx::query!("SELECT username, password FROM users LIMIT 1")
+    //         .fetch_one(&self.db_pool)
+    //         .await
+    //         .expect("Failed to create test users.");
+    //     (row.username, row.password)
+    // }
 }
 
 pub async fn spawn_app() -> TestApp {
@@ -113,25 +151,27 @@ pub async fn spawn_app() -> TestApp {
         db_pool: get_connection_pool(&configuration.database),
         email_server,
         port: app_port,
+        test_user: TestUser::generate(),
     };
-    add_test_app(&test_app.db_pool).await;
+    test_app.test_user.store(&test_app.db_pool).await;
+    // add_test_app(&test_app.db_pool).await;
     test_app
 }
 
-async fn add_test_app(pool: &PgPool) {
-    let user_id = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128());
-    let username = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()).to_string();
-    let password = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()).to_string();
-    sqlx::query!(
-        "INSERT INTO users (user_id, username, password) VALUES ($1, $2, $3)",
-        user_id,
-        username,
-        password
-    )
-    .execute(pool)
-    .await
-    .expect("Failed to create test users.");
-}
+// async fn add_test_app(pool: &PgPool) {
+//     let user_id = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128());
+//     let username = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()).to_string();
+//     let password = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()).to_string();
+//     sqlx::query!(
+//         "INSERT INTO users (user_id, username, password) VALUES ($1, $2, $3)",
+//         user_id,
+//         username,
+//         password
+//     )
+//     .execute(pool)
+//     .await
+//     .expect("Failed to create test users.");
+// }
 
 async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // Create database
