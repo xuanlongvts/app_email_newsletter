@@ -6,7 +6,6 @@ use email_newsletter::telemetry::{get_subscriber, init_subscriber};
 use linkify::{LinkFinder, LinkKind};
 use once_cell::sync::Lazy;
 use reqwest::Url;
-use sha3::Digest;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 use wiremock::MockServer;
@@ -105,7 +104,6 @@ impl TestApp {
     }
 
     pub async fn post_newsletter(&self, body: serde_json::Value) -> reqwest::Response {
-        // let (username, password) = self.test_user().await;
         reqwest::Client::new()
             .post(&format!("{}/newsletters", &self.address))
             .basic_auth(&self.test_user.username, Some(&self.test_user.password))
@@ -114,14 +112,6 @@ impl TestApp {
             .await
             .expect("Failed to execute request.")
     }
-
-    // pub async fn test_user(&self) -> (String, String) {
-    //     let row = sqlx::query!("SELECT username, password FROM users LIMIT 1")
-    //         .fetch_one(&self.db_pool)
-    //         .await
-    //         .expect("Failed to create test users.");
-    //     (row.username, row.password)
-    // }
 }
 
 pub async fn spawn_app() -> TestApp {
@@ -154,24 +144,8 @@ pub async fn spawn_app() -> TestApp {
         test_user: TestUser::generate(),
     };
     test_app.test_user.store(&test_app.db_pool).await;
-    // add_test_app(&test_app.db_pool).await;
     test_app
 }
-
-// async fn add_test_app(pool: &PgPool) {
-//     let user_id = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128());
-//     let username = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()).to_string();
-//     let password = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()).to_string();
-//     sqlx::query!(
-//         "INSERT INTO users (user_id, username, password) VALUES ($1, $2, $3)",
-//         user_id,
-//         username,
-//         password
-//     )
-//     .execute(pool)
-//     .await
-//     .expect("Failed to create test users.");
-// }
 
 async fn configure_database(config: &DatabaseSettings) -> PgPool {
     // Create database
