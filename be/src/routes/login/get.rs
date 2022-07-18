@@ -1,5 +1,5 @@
 use crate::startup::HmacSecret;
-use actix_web::{http::header::ContentType, web, HttpResponse};
+use actix_web::{http::header::ContentType, HttpRequest, HttpResponse};
 use hmac::{Hmac, Mac};
 use secrecy::ExposeSecret;
 
@@ -23,25 +23,10 @@ impl QueryParams {
     }
 }
 
-pub async fn login_form(
-    query: Option<web::Query<QueryParams>>,
-    secret: web::Data<HmacSecret>,
-) -> HttpResponse {
-    let error_html = match query {
-        None => "".into(), // in case enter on Browser  /login
-        Some(query) => match query.0.verify(&secret) {
-            Ok(error) => {
-                format!("<p><i>{}</i></p>", htmlescape::encode_minimal(&error))
-            }
-            Err(e) => {
-                tracing::warn!(
-                    error.message = %e,
-                    error.cause_chain = ?e,
-                    "Failed to verify query parameters using the HMAC tag"
-                );
-                "".into()
-            }
-        },
+pub async fn login_form(request: HttpRequest) -> HttpResponse {
+    let error_html = match request.cookie("_flash") {
+        None => "".into(),
+        Some(cookie) => format!("<p><i>{}</i></p>", cookie.value()),
     };
     HttpResponse::Ok()
         .content_type(ContentType::html())
