@@ -31,7 +31,7 @@ serde-aux = "3.0.1"
 unicode-segmentation = "1.9.0"
 claim = "0.5.0"
 validator = "0.15.0"
-reqwest = { version = "0.11.10", default-features = false, features = ["json", "rustls-tls"] }
+#reqwest = { version = "0.11.10", default-features = false, features = ["json", "rustls-tls"] }
 rand = { version = "0.8.5", features=["std_rng"] }
 thiserror = "1.0.31"
 anyhow = "1.0.58"
@@ -62,6 +62,11 @@ version = "1.1.1"
 features = [
     "v4"
 ]
+
+[dependencies.reqwest]
+version = "0.11.10"
+default-features = false
+features = ["json", "rustls-tls", "cookies"]
 
 [dev-dependencies]
 fake = "2.4.3"

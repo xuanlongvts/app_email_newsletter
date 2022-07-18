@@ -13,6 +13,7 @@ impl QueryParams {
     fn verify(self, secret: &HmacSecret) -> Result<String, anyhow::Error> {
         let tag = hex::decode(self.tag)?;
         let query_string = format!("error={}", urlencoding::Encoded::new(&self.error));
+
         let mut mac =
             Hmac::<sha2::Sha256>::new_from_slice(secret.0.expose_secret().as_bytes()).unwrap();
         mac.update(query_string.as_bytes());
@@ -27,7 +28,7 @@ pub async fn login_form(
     secret: web::Data<HmacSecret>,
 ) -> HttpResponse {
     let error_html = match query {
-        None => "".into(),
+        None => "".into(), // in case enter on Browser  /login
         Some(query) => match query.0.verify(&secret) {
             Ok(error) => {
                 format!("<p><i>{}</i></p>", htmlescape::encode_minimal(&error))
@@ -42,7 +43,6 @@ pub async fn login_form(
             }
         },
     };
-
     HttpResponse::Ok()
         .content_type(ContentType::html())
         .body(format!(
