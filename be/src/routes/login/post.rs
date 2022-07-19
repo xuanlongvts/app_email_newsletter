@@ -6,8 +6,8 @@ use actix_web::error::InternalError;
 use actix_web::http::header::LOCATION;
 use actix_web::web;
 use actix_web::HttpResponse;
-use hmac::{Hmac, Mac};
-use secrecy::{ExposeSecret, Secret};
+use actix_web_flash_messages::FlashMessage;
+use secrecy::Secret;
 use sqlx::PgPool;
 use std::fmt::Formatter;
 
@@ -54,20 +54,8 @@ pub async fn login(
                 AuthError::InvalidCredentials(_) => LoginError::AuthError(e.into()),
                 AuthError::UnexpectedError(_) => LoginError::UnexpectedError(e.into()),
             };
-            // let query_string = format!("error={}", urlencoding::Encoded::new(e.to_string()));
-            // let hmac_tag = {
-            //     type HmacSha256 = Hmac<sha2::Sha256>;
-            //     let mut mac =
-            //         HmacSha256::new_from_slice(secret.0.expose_secret().as_bytes()).unwrap();
-            //     mac.update(query_string.as_bytes());
-            //     mac.finalize().into_bytes()
-            // };
-            // let response = HttpResponse::SeeOther()
-            //     .insert_header((
-            //         LOCATION,
-            //         format!("/login?{}&tag={:x}", query_string, hmac_tag),
-            //     ))
-            //     .finish();
+
+            FlashMessage::error(e.to_string()).send();
             let response = HttpResponse::SeeOther()
                 .insert_header((LOCATION, "/login"))
                 .cookie(Cookie::new("_flash", e.to_string()))
