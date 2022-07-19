@@ -13,3 +13,5 @@ email_client:
     sender_email: "test@gmail.com"
     authorization_token: "my-secret-token"
     timeout_seconds: 10
+# 6379 is Redis' default port
+redis_uri: "redis://127.0.0.1:6379"

@@ -31,7 +31,7 @@ serde-aux = "3.0.1"
 unicode-segmentation = "1.9.0"
 claim = "0.5.0"
 validator = "0.15.0"
-#reqwest = { version = "0.11.10", default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "0.11.10", default-features = false, features = ["json", "rustls-tls", "cookies"] }
 rand = { version = "0.8.5", features=["std_rng"] }
 thiserror = "1.0.31"
 anyhow = "1.0.58"
@@ -44,6 +44,7 @@ hmac = { version = "0.12.1", features = ["std"] }
 sha2 = "0.10.2"
 hex = "0.4.3"
 actix-web-flash-messages = { version = "0.4.1", features = ["cookies"] }
+actix-session = { version = "0.7.0", features = ["redis-rs-tls-session"] }
 
 [dependencies.sqlx]
 version = "0.5.13"
@@ -63,11 +64,6 @@ version = "1.1.1"
 features = [
     "v4"
 ]
-
-[dependencies.reqwest]
-version = "0.11.10"
-default-features = false
-features = ["json", "rustls-tls", "cookies"]
 
 [dev-dependencies]
 fake = "2.4.3"
