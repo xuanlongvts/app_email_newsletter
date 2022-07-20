@@ -8,7 +8,7 @@ if ! [ -x "$(command -v psql)" ]; then
 fi
 
 if ! [ -x "$(command -v sqlx)" ]; then
-	echo >&2 "rror: sqlx is not installed."
+	echo >&2 "error: sqlx is not installed."
 	echo >&2 "Use:"
 	echo >&2 " cargo install sqlx-cli --no-default-features --features native-tls,postgres"
 	echo >&2 "to install it."
@@ -51,7 +51,7 @@ done
 
 >&2 echo "Postgres is up and running on port ${DB_PORT} - running migrations now!"
 
-export DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME} 
+export DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}
 sqlx database create
 sqlx migrate run
 
