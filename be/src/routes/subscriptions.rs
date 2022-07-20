@@ -117,8 +117,9 @@ pub async fn send_confirmation_email(
 pub async fn insert_subscriber(
     transaction: &mut Transaction<'_, Postgres>,
     new_subscriber: &NewSubscriber,
-) -> Result<sqlx::types::Uuid, sqlx::Error> {
-    let subscriber_id = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128());
+) -> Result<Uuid, sqlx::Error> {
+    // let subscriber_id = sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128());
+    let subscriber_id = Uuid::new_v4();
     sqlx::query!(
         r#"
 		INSERT INTO subscriptions (id, email, name, subscribed_at, status)
@@ -130,11 +131,11 @@ pub async fn insert_subscriber(
         Utc::now()
     )
     .execute(transaction)
-    .await
-    .map_err(|e| {
-        tracing::error!("Failed to execute query: {:?}", e);
-        e
-    })?;
+    .await?;
+    // .map_err(|e| {
+    //     tracing::error!("Failed to execute query: {:?}", e);
+    //     e
+    // })?;
 
     Ok(subscriber_id)
 }
@@ -145,7 +146,7 @@ pub async fn insert_subscriber(
 )]
 pub async fn store_token(
     transaction: &mut Transaction<'_, Postgres>,
-    subscriber_id: sqlx::types::Uuid,
+    subscriber_id: Uuid,
     subscription_token: &str,
 ) -> Result<(), StoreTokenError> {
     sqlx::query!(

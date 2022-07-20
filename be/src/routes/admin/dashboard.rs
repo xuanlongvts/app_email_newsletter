@@ -16,12 +16,11 @@ pub async fn admin_dashboard(
     session: Session,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, actix_web::Error> {
-    let username =
-        if let Some(user_id) = session.get::<sqlx::types::Uuid>("user_id").map_err(e500)? {
-            get_username(user_id, &pool).await.map_err(e500)?
-        } else {
-            todo!()
-        };
+    let username = if let Some(user_id) = session.get::<uuid::Uuid>("user_id").map_err(e500)? {
+        get_username(user_id, &pool).await.map_err(e500)?
+    } else {
+        todo!()
+    };
 
     Ok(HttpResponse::Ok()
         .content_type(ContentType::html())
@@ -42,7 +41,7 @@ pub async fn admin_dashboard(
 }
 
 #[tracing::instrument(name = "Get username", skip(pool))]
-async fn get_username(user_id: sqlx::types::Uuid, pool: &PgPool) -> Result<String, anyhow::Error> {
+async fn get_username(user_id: uuid::Uuid, pool: &PgPool) -> Result<String, anyhow::Error> {
     let row = sqlx::query!(
         r#"
         SELECT username

@@ -81,7 +81,7 @@ pub fn get_configuration() -> Result<Settings, ConfigError> {
         )
         .build()?;
 
-    println!("settings ---> {:#?}", settings);
+    // println!("settings ---> {:#?}", settings);
 
     settings.try_deserialize::<Settings>()
 }

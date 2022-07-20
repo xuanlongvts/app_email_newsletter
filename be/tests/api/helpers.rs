@@ -34,7 +34,7 @@ pub struct TestApp {
 
 /// TestUser
 pub struct TestUser {
-    pub user_id: sqlx::types::Uuid,
+    pub user_id: Uuid,
     pub username: String,
     pub password: String,
 }
@@ -42,9 +42,9 @@ pub struct TestUser {
 impl TestUser {
     pub fn generate() -> TestUser {
         Self {
-            user_id: sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()),
-            username: sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()).to_string(),
-            password: sqlx::types::Uuid::from_u128(Uuid::new_v4().as_u128()).to_string(),
+            user_id: Uuid::new_v4(),
+            username: Uuid::new_v4().to_string(),
+            password: Uuid::new_v4().to_string(),
         }
     }
 
