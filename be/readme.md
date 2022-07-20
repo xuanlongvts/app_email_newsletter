@@ -10,3 +10,6 @@
 
 5. Docker build
    sudo docker build --tag email_newsletter --file Dockerfile .
+
+6. Run test and log information
+   sudo cargo run -- --no-capture
