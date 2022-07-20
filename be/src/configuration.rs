@@ -58,28 +58,32 @@ impl EmailClientSettings {
 }
 
 pub fn get_configuration() -> Result<Settings, ConfigError> {
+    let base_path = std::env::current_dir().expect("Failed to determine the current directory");
+    let configuration_directory = base_path.join("configuration");
+
     let environment: Environment = std::env::var("APP_ENVIRONMENT")
         .unwrap_or_else(|_| "local".into())
         .try_into()
         .expect("Failed to parse APP_ENVIRONMENT.");
 
-    let base_path = std::env::current_dir().expect("Failed to determine the current directory");
-    let configuration_directory = base_path.join("configuration");
-
-    let base_path = configuration_directory.join("base");
-    let curr_env_path = configuration_directory.join(environment.as_str());
+    let base_path = configuration_directory.join("base.yaml");
+    let curr_env_path = configuration_directory.join(&format!("{}.yaml", environment.as_str()));
 
     let settings = Config::builder()
-        .add_source(File::from(base_path).required(true))
-        .add_source(File::from(curr_env_path).required(true))
+        .add_source(File::from(base_path))
+        .add_source(File::from(curr_env_path))
         // Add in settings from environment variables (with a prefix of APP and '__' as separator)
         // E.g. `APP_APPLICATION__PORT=5001 would set `Settings.application.port`
-        .add_source(config::Environment::with_prefix("app").separator("__"))
+        .add_source(
+            config::Environment::with_prefix("APP")
+                .prefix_separator("_")
+                .separator("__"),
+        )
         .build()?;
 
-    // println!("settings ---> {:?}", settings);
+    println!("settings ---> {:#?}", settings);
 
-    settings.try_deserialize()
+    settings.try_deserialize::<Settings>()
 }
 
 impl DatabaseSettings {
